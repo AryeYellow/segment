@@ -7,6 +7,7 @@ from segment.hmm_flag import tk as tk2
 
 _dict = set(tk1.word2flag)
 fullmatch = compile('[a-z0-9\u4e00-\u9fa5]*[a-z\u4e00-\u9fa5][a-z0-9\u4e00-\u9fa5]*', I).fullmatch
+tk1.add_re(compile('[a-z0-9_-]', I), 'ENUM')
 N = 99999
 
 

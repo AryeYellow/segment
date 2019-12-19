@@ -2,12 +2,11 @@ from os.path import exists
 from gensim.models import Word2Vec
 from collections import Counter
 from segment import clean, tk, corpus
-_path_w2v = ''
-_path_counter = ''
+
 size = 100
 window = 10
 sg = 1  # skip-gram
-flag_filter = {'d', 'e', 'h', 'k', 'm', 'mq', 'o', 'p', 'r', 'u', 'y', 'NUM'}
+flag_filter = {'c', 'd', 'e', 'k', 'm', 'mq', 'o', 'p', 'r', 'u', 'y', 'NUM'}
 
 
 def get_flag(word):
@@ -19,7 +18,7 @@ def get_flag(word):
     return True
 
 
-def clean_text(text):
+def clear(text):
     text = clean.re_url.sub('', text)
     text = clean.re_email.sub('', text)
     text = clean.re_ip.sub('', text)
@@ -30,15 +29,16 @@ def clean_text(text):
 
 
 def texts2sentences(texts):
-    # return [[w for w in tk.cut(clean_text(t)) if get_flag(w)] for t in texts]
-    return [[w for w in tk.cut(p) if get_flag(w)] for t in texts for p in clean.text2sentence(clean_text(t))]
+    # return [[w for w in tk.cut(clear(t)) if get_flag(w)] for t in texts]
+    return [[w for w in tk.cut(p) if get_flag(w)] for t in texts for p in clean.text2sentence(clear(t))]
 
 
 def modeling(sentences, cut=texts2sentences, model_path='word2vec', loop=False):
     """词向量建模"""
+    if cut:
+        sentences = cut(sentences)
+    counter = Counter(w for s in sentences for w in s)
     if not exists(model_path):
-        if cut:
-            sentences = cut(sentences)
         Word2Vec(sentences, size=size, window=window, sg=sg).save(model_path)
     wv = Word2Vec.load(model_path).wv
     while loop:
@@ -48,7 +48,6 @@ def modeling(sentences, cut=texts2sentences, model_path='word2vec', loop=False):
                 tk.bar(similarity, 1, word)
         except KeyError:
             pass
-    counter = Counter(w for s in sentences for w in s)
     return wv, counter
 
 
@@ -89,6 +88,26 @@ def synonym_bigram(texts, center_word, filtrate=get_flag):
     left = corpus.ls2df([(i, j, k, tk.bar(k, u)) for(i, j), k in left.most_common()], ['word', 'flag', 'freq', 'bar'])
     right = corpus.ls2df([(i, j, k, tk.bar(k, u)) for(i, j), k in right.most_common()], ['word', 'flag', 'freq', 'bar'])
     corpus.df2sheets([left, right], ['left', 'right'], 'synonym_bigram_%s.xlsx' % center_word)
+
+
+def synonym_neighbor(texts, center_word, filtrate=get_flag, half=5):
+    """组合词"""
+    tk.add_word(center_word, 2000, 'CENTER')
+    c = Counter()
+    for text in texts:
+        if center_word in text:
+            for sentence in clean.text2phrase(text):
+                words = [w for w in tk.cut(sentence) if filtrate(w)]
+                length = len(words)
+                for i in range(length):
+                    if words[i] == center_word:
+                        for j in range(max(i-half, 0), min(i+1+half, length)):
+                            word = words[j]
+                            flag = tk.get_flag(word)
+                            c[(word, flag)] += 1 / max(abs(j - i), 1)
+    u = c.most_common()[1][1]
+    df = corpus.ls2df([(i, j, k, tk.bar(k, u)) for(i, j), k in c.most_common()], ['word', 'flag', 'freq', 'bar'])
+    corpus.df2sheet(df, 'synonym_neighbor_%s.xlsx' % center_word)
 
 
 def _edit_dist_step(lev, i, j, s1, s2, transpositions=False):
@@ -145,5 +164,3 @@ def synonym_ed(texts, word, cut=clean.text2phrase):
     u = c.most_common()[0][1]
     corpus.ls2sheet([(w, len(w), f, tk.bar(f, u)) for w, f in c.most_common()],
                     ['word', 'len', 'freq', 'bar'], 'synonym_ed_%s.xlsx' % word)
-    for w, f in reversed(c.most_common()):
-        tk.bar(f, u, w)
