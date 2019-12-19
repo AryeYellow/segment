@@ -60,7 +60,8 @@ class Color:
         len_t = len(text)
         for i in range(len_t - len_w, -1, -1):
             if text[i: i + len_w] == word:
-                print(text[:i] + highlight_word + text[i + len_w:])
+                text = text[:i] + highlight_word + text[i + len_w:]
+        print(text)
 
     @classmethod
     def hot(cls, value, half=.5):
@@ -72,17 +73,6 @@ class Color:
         if label:
             print('\033[0;7m'+label.ljust(length, ' ')+END+cls.hot(value, maximum/2))
         return '#' * length
-
-    @classmethod
-    def histogram(cls, list_of_list):
-        if isinstance(list_of_list, dict):
-            maximum = max(list_of_list.values())
-            list_of_list = list_of_list.items()
-        else:
-            maximum = max(i[1] for i in list_of_list)
-        for label, value in list_of_list:
-            length = int(value / maximum * 100)
-            print('\033[0;7m'+label.ljust(length, ' ')+END+cls.hot(value, maximum/2))
 
 
 class Timer(Color):
@@ -128,5 +118,4 @@ if __name__ == '__main__':
     print(t.highlight('一片一片又一片', '一片'))
     t.bar(30, 100, 'boy');t.bar(.7, 1, 'girl')
     print(t.bar(50, 100), 50);print(t.bar(.5, 1), .5)
-    Color.histogram({'a': 1, 'c': 2, 'b': 3})
     print(t);[i**2 for i in range(666666)];print(t)

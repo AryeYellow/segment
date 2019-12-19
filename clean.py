@@ -53,8 +53,13 @@ def replace_tag(html):
     return html
 
 
+def replace_empty_bracket(text):
+    return re.sub('\[\]|【】|（）|\(\)|{}|<>', '', text)
+
+
 def replace_punctuation(text):
     """替换标点（英→中）"""
+    text = replace_empty_bracket(text)  # 空括号
     text = text.replace('(', '（').replace(')', '）')  # 圆括号
     text = text.replace('【', '（').replace('】', '）')  # 方括号（后用于关键词高亮）
     text = re.sub('[;；]+', '；', text)  # 分号
@@ -76,7 +81,7 @@ def replace_space(text):
     return text
 
 
-def replace_space_resolutely(text, substitution=' '):
+def replace_space_resolutely(text, substitution=''):
     return re.sub('\s+', substitution, text.strip())
 
 
@@ -85,6 +90,7 @@ sep15 = re.compile('[\n。…；;!！?？]+|(?<=[a-z\u4e00-\u9fa5])[.]+(?=[a-z\u
 sep20 = re.compile('[!！?？]+').split
 sep30 = re.compile('[,，:：]+').split
 sep40 = re.compile('[^a-zA-Z0-9\u4e00-\u9fa5]+').split
+sep45 = re.compile('[^a-zA-Z\u4e00-\u9fa5]+').split
 sep_cn = re.compile(
     '^ ?[0-9]{1,2}、|'
     '^ ?[0-9]{1,2}[.](?=[^0-9])|'
