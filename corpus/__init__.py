@@ -19,6 +19,7 @@
 # 词性
 df -> d
 dg -> d
+h -> d
 mg -> t
 rg -> r
 rr -> r
@@ -32,6 +33,7 @@ uv -> u
 uz -> u
 vd -> v
 vq -> v
+vi -> v
 """
 import pandas as pd, pickle
 from os import path
