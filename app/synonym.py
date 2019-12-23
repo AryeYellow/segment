@@ -6,7 +6,7 @@ from segment import clean, tk, corpus
 size = 100
 window = 10
 sg = 1  # skip-gram
-flag_filter = {'c', 'd', 'e', 'k', 'm', 'mq', 'o', 'p', 'r', 'u', 'y', 'NUM'}
+flag_filter = {'c', 'd', 'e', 'm', 'mq', 'o', 'p', 'r', 'u', 'y', 'NUM'}
 
 
 def get_flag(word):
