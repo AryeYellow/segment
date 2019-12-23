@@ -1,10 +1,11 @@
-from re import compile as rec
+from re import compile
 from math import log
 from segment.corpus import txt2df, df2dt
 from segment.conf import Timer
+from segment.clean import replace_empty_bracket
 
-RE_EN = rec('[a-zA-Z]+')
-RE_NUM = rec('[0-9]+%?|[0-9]+[.][0-9]+%?')
+RE_EN = compile('[a-zA-Z]+')
+RE_NUM = compile('[0-9]+%?|[0-9]+[.][0-9]+%?')
 NA, EN, NUM = 'NA', 'EN', 'NUM'
 GET_FREQ = lambda w: {1: 2000, 2: 300, 3: 40, 4: 5}.get(len(w), 2)
 
@@ -12,7 +13,7 @@ GET_FREQ = lambda w: {1: 2000, 2: 300, 3: 40, 4: 5}.get(len(w), 2)
 class Tokenizer(Timer):
 
     def __init__(self, word2freq, word2flag):
-        Timer.__init__(self)
+        super().__init__()
         self.word2freq = word2freq
         self.total = sum(word2freq.values())
         self.word2flag = word2flag
@@ -116,38 +117,41 @@ class Tk(Tokenizer):
             yield l_word, x, y
             x = y
 
-    def highlight_print(self, text, lexicon):
-        """高亮单输出，全替换"""
-        lexicon = {lexicon} if isinstance(lexicon, str) else set(lexicon)
-        print(''.join(self.background_yellow(w) if w in lexicon else w for w in self.cut(text)))
-
-    def highlight_prints(self, sentences, lexicon, half=55):
-        """高亮多输出"""
-        lexicon = {lexicon} if isinstance(lexicon, str) else set(lexicon)
+    def highlight_print_cut(self, sentences, words, half=55):
+        words = {words} if isinstance(words, str) else words
         sentences = [sentences] if isinstance(sentences, str) else sentences
         for sentence in sentences:
             for l_word, x, y in self.cut_with_position(sentence):
-                if l_word in lexicon:
-                    w = self.background_yellow(l_word)
-                    print(sentence[max(0, x-half):x] + w + sentence[y:y+half])
+                if l_word in words:
+                    red = self.dark_red(l_word)
+                    print(sentence[max(0, x-half):x] + red + sentence[y:y+half])
 
-    def highlight_prints_re(self, sentences, pattern, half=55):
-        """高亮多输出（正则表达式）"""
-        self.re_ls.append(rec(pattern) if isinstance(pattern, str) else pattern)
+    def highlight_print_re(self, sentences, pattern, half=55):
+        self.re_ls.append(compile(pattern) if isinstance(pattern, str) else pattern)
         sentences = [sentences] if isinstance(sentences, str) else sentences
         for sentence in sentences:
             for l_word, x, y in self.cut_with_position(sentence):
                 if self.re_ls[-1].fullmatch(l_word):
-                    w = self.background_yellow(l_word)
-                    print(sentence[max(0, x-half):x] + w + sentence[y:y+half])
+                    word = self.dark_red(l_word)
+                    print(sentence[max(0, x-half):x] + word + sentence[y:y+half])
         print(self.re_ls.pop())
 
-    def highlight_yield(self, sentence, lexicon):
-        half = (85 - max(len(w) for w in lexicon)) // 2 - 1
-        s = sentence.replace('【', ' ').replace('】', ' ')
+    def highlight_yield(self, sentence, lexicon, length=85):
+        lexicon = {lexicon} if isinstance(lexicon, str) else lexicon
+        half = (length - max(len(w) for w in lexicon)) // 2 - 1
+        s = replace_empty_bracket(sentence)
         for l_word, x, y in self.cut_with_position(s):
             if l_word in lexicon:
                 yield l_word, s[max(0, x-half):x] + '【%s】' % l_word + s[y:y+half]
+
+    def highlight_whole(self, sentence, lexicon):
+        lexicon = {lexicon} if isinstance(lexicon, str) else set(lexicon)
+        s = replace_empty_bracket(sentence)
+        return ''.join('【%s】' % w if w in lexicon else w for w in self.cut(s))
+
+    @staticmethod
+    def bracket2color(sentence):
+        print(sentence.replace('【', '\033[033;7m').replace('】', '\033[0m'))
 
 
 # 实例化
@@ -159,15 +163,15 @@ add_word = tk.add_word
 del_word = tk.del_word
 get_flag = tk.get_flag
 get_flags = tk.get_flags
-highlight_print = tk.highlight_print
+cut_with_position = tk.cut_with_position
 
 
 if __name__ == '__main__':
-    _text = 'mount king斩杀大法师'
-    print(lcut(_text))
+    text = 'mount king斩杀大法师'
+    print(lcut(text))
     add_word('mount king', 2, 'HERO')
     add_word('法师', 10**10)
-    highlight_print(_text, 'mount king')
+    print(lcut(text))
     print(get_flags(cut('mount king斩杀Archmage')))
     print(tk.word2freq.get('法师'))
-    tk.highlight_prints_re(_text, '[a-z A-Z]+', 1)
+    tk.highlight_print_re(text, '[a-z A-Z]+', 1)

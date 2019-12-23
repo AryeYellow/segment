@@ -3,7 +3,6 @@
 ## 工程架构
 - **app** 应用
     - `bigram.py` 统计语言模型
-    - `clf.py` 监督分类模型
     - `new_word.py` 新词探索
     - `synonym.py` 近义词探索
 - **corpus** 语料库
@@ -25,7 +24,7 @@
 - `conf.py` 可视化、计时器
 
 ## 依赖
-- Anaconda
+- pandas
 - gensim
 - sklearn
 

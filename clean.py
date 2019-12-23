@@ -53,13 +53,8 @@ def replace_tag(html):
     return html
 
 
-def replace_empty_bracket(text):
-    return re.sub('\[\]|【】|（）|\(\)|{}|<>', '', text)
-
-
 def replace_punctuation(text):
     """替换标点（英→中）"""
-    text = replace_empty_bracket(text)  # 空括号
     text = text.replace('(', '（').replace(')', '）')  # 圆括号
     text = text.replace('【', '（').replace('】', '）')  # 方括号（后用于关键词高亮）
     text = re.sub('[;；]+', '；', text)  # 分号
@@ -83,6 +78,10 @@ def replace_space(text):
 
 def replace_space_resolutely(text, substitution=''):
     return re.sub('\s+', substitution, text.strip())
+
+
+def replace_empty_bracket(text):
+    return re.sub('\[\]|【】|（）|\(\)|{}|<>', '', text)
 
 
 sep10 = re.compile('[\n。…；;]+|(?<=[\u4e00-\u9fa5])[.]+(?=[\u4e00-\u9fa5])').split
