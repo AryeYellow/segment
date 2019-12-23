@@ -20,6 +20,7 @@
 df -> d
 dg -> d
 h -> d
+k -> n r
 mg -> t
 rg -> r
 rr -> r
