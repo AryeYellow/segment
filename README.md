@@ -1,8 +1,10 @@
 # 中文自然语言处理
+https://github.com/AryeYellow/segment
 
-## 工程架构
+# 工程架构
 - **app** 应用
     - `bigram.py` 统计语言模型
+    - `clf.py` 监督分类模型
     - `new_word.py` 新词探索
     - `synonym.py` 近义词探索
 - **corpus** 语料库
@@ -23,12 +25,12 @@
 - `clean.py` 文本清洗
 - `conf.py` 可视化、计时器
 
-## 依赖
-- pandas
+# 依赖
+- Anaconda
 - gensim
 - sklearn
 
-## 词性
+# 词性表
 
 <table>
 <tr>
@@ -69,9 +71,6 @@
 </tr>
 <tr>
 <td>j</td><td>简称略语</td><td>交警 中低收入 四个现代 经检测 青委 车改 常委 …</td>
-</tr>
-<tr>
-<td>k</td><td>后接成分</td><td>型 者 式 们</td>
 </tr>
 <tr>
 <td>l</td><td>习用语</td><td>不懂装懂 相聚一刻 由下而上 十字路口 查无此人 …</td>
