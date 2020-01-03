@@ -21,6 +21,11 @@ AdaBoostClassifier | 0.6979 | 23.44
 GradientBoostingClassifier | 0.8381 | 793.17
 RandomForestClassifier | 0.8399 | 129.67
 SVC | 0.8450 | 492.10
+
+建议：
+1. 逻辑回归：准确率高且稳定，速度快
+2. 朴素贝叶斯：速度极快
+3. 随机森林：准确率高但不稳定，速度中
 """
 from collections import Counter
 from numpy import argmax
@@ -28,10 +33,12 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.model_selection import train_test_split
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.linear_model import LogisticRegression
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import RandomForestClassifier
 from segment import tk, clean, corpus
 from warnings import filterwarnings
 filterwarnings('ignore')  # 不打印警告
-
+models = [MultinomialNB, LogisticRegression, DecisionTreeClassifier, RandomForestClassifier]
 N = 20000
 
 
@@ -52,11 +59,12 @@ def cut(text):
                 yield word
 
 
-def clf_word(texts, labels, model=MultinomialNB, detail=False):
+def clf_word(texts, labels, model_num=0, detail=False):
     # 向量化
     vectorizer = TfidfVectorizer(tokenizer=cut)
     x = vectorizer.fit_transform(texts)
     # 建模
+    model = models[model_num]
     clf = model()
     clf.fit(x, labels)
     classes = clf.classes_
@@ -72,7 +80,7 @@ def clf_word(texts, labels, model=MultinomialNB, detail=False):
             max_proba = predict_proba[max_index]  # 概率
             label = classes[max_index]  # 类别
             ls.append([freq, flag, word, label, max_proba, tk.bar(max_proba)])
-        corpus.ls2sheet(ls, ['freq', 'flag', 'word', 'label', 'probability', 'bar'], 'clf_word')
+        corpus.ls2sheet(ls, ['freq', 'flag', 'word', 'label', 'probability', 'bar'], 'clf_word_'+model.__name__)
     else:
         maximum = c[0][1] ** .5
         ls = []
@@ -81,7 +89,7 @@ def clf_word(texts, labels, model=MultinomialNB, detail=False):
             predict_proba = clf.predict_proba(vectorizer.transform([word]))[0]  # 概率
             label = classes[argmax(predict_proba)]  # 类别
             ls.append([flag, word, label, *predict_proba, freq, tk.bar(freq**.5, maximum)])
-        corpus.ls2sheet(ls, ['flag', 'word', 'label', *clf.classes_, 'freq', 'bar'], 'clf_word_detail')
+        corpus.ls2sheet(ls, ['flag', 'word', 'label', *clf.classes_, 'freq', 'bar'], 'clf_word_detail'+model.__name__)
         for i in reversed(ls):
             print(i[1], i[2], i[-1])
 
@@ -94,7 +102,7 @@ def clf_text(X, y):
     X_train = vectorizer.fit_transform(X_train)
     X_test = vectorizer.transform(X_test)
     # 建模
-    for model in [MultinomialNB, LogisticRegression]:
+    for model in models:
         t0 = tk.second
         clf = model()
         clf.fit(X_train, y_train)
