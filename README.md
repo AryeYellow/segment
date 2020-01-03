@@ -7,6 +7,7 @@ https://github.com/AryeYellow/segment
     - `clf.py` 监督分类模型
     - `new_word.py` 新词探索
     - `synonym.py` 近义词探索
+    - `tfidf.py` 关键词抽取
 - **corpus** 语料库
     - `__init__.py` 语料读写工具
     - `city.py` 中国行政区划（省市）

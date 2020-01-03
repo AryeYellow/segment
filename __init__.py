@@ -1,5 +1,6 @@
-import re
 from math import log
+import re
+from collections import Iterable
 from segment.corpus import txt2df, df2dt
 from segment.conf import Timer
 
@@ -26,12 +27,6 @@ class Tokenizer(Timer):
         word2freq = df2dt(df[[0, 1]])
         word2flag = df2dt(df[[0, 2]])
         return cls(word2freq, word2flag)
-
-    def update_dt(self, word2freq, word2flag):
-        self.word2flag.update(word2flag)  # 词性重复者取新
-        self.word2freq = dict(word2freq, **self.word2freq)  # 词频重复者取旧
-        self.total = sum(self.word2freq.values())
-        self.max_len = max(len(i) for i in self.word2freq.keys())
 
     def calculate(self, sentence):
         length = len(sentence)
@@ -71,8 +66,8 @@ class Tokenizer(Timer):
         return list(self.cut(sentence))
 
     def add_word(self, word, freq=-1, flag=None, add=True):
-        original_freq = self.word2freq.get(word, 0)
         freq = GET_FREQ(word) if freq < 0 else freq
+        original_freq = self.word2freq.get(word, 0)
         self.word2freq[word] = original_freq + freq if add else freq
         self.total = self.total - original_freq + self.word2freq[word]
         self.word2flag[word] = flag if flag else self.get_flag(word)
@@ -83,6 +78,9 @@ class Tokenizer(Timer):
             del self.word2freq[word]
             self.total -= original_freq
             del self.word2flag[word]
+
+    def update_max_len(self):
+        self.max_len = max(len(w) for w in self.word2freq.keys())
 
     def get_flag(self, word):
         if word in self.word2flag:
@@ -96,7 +94,7 @@ class Tokenizer(Timer):
         return [self.get_flag(word) for word in words]
 
     def add_re(self, re_l, re_flag='RE', max_len=17):
-        re_l = [re.compile(re_l)]if isinstance(re_l, str)else [re_l]if isinstance(re_l, re.Pattern)else re_l
+        re_l = [re.compile(re_l)]if isinstance(re_l, str)else re_l if isinstance(re_l, Iterable)else[re_l]
         self.re_ls.extend(re_l)
         self.re_flags.extend([re_flag]*len(re_l) if isinstance(re_flag, str) else re_flag)
         self.max_len = max_len  # 2019/11/11 11:11 -> 长度17
@@ -124,14 +122,14 @@ class Tk(Tokenizer):
         for text in texts:
             print(''.join(self.background_yellow(w) if w in lexicon else w for w in self.cut(text)))
 
-    def highlight_print_re(self, texts, pattern):
+    def highlight_print_re(self, texts, pattern, max_len=17):
         """高亮单输出（正则表达式）"""
-        self.add_re(pattern)
+        self.add_re(pattern, max_len=max_len)
         fullmatch = lambda w: self.re_ls[-1].fullmatch(w)
         texts = [texts] if isinstance(texts, str) else texts
         for text in texts:
             print(''.join(self.background_yellow(w) if fullmatch(w) else w for w in self.cut(text)))
-        print(self.re_ls.pop())
+        # self.cyan(self.re_ls.pop())
 
     def highlight_prints(self, sentences, lexicon, half=55):
         """高亮多输出"""
@@ -143,16 +141,16 @@ class Tk(Tokenizer):
                     w = self.background_yellow(l_word)
                     print(sentence[max(0, x-half):x] + w + sentence[y:y+half])
 
-    def highlight_prints_re(self, sentences, pattern, half=55):
+    def highlight_prints_re(self, sentences, pattern, half=55, max_len=17):
         """高亮多输出（正则表达式）"""
-        self.add_re(pattern)
+        self.add_re(pattern, max_len=max_len)
         sentences = [sentences] if isinstance(sentences, str) else sentences
         for sentence in sentences:
             for l_word, x, y in self.cut_with_position(sentence):
                 if self.re_ls[-1].fullmatch(l_word):
                     w = self.background_yellow(l_word)
                     print(sentence[max(0, x-half):x] + w + sentence[y:y+half])
-        print(self.re_ls.pop())
+        # self.cyan(self.re_ls.pop())
 
     def highlight_yield(self, sentence, lexicon):
         half = (85 - max(len(w) for w in lexicon)) // 2 - 1

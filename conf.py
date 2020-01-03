@@ -10,7 +10,7 @@ class Color:
     @staticmethod
     def _wrap_colour(colour, args, prints, sep):
         if prints:
-            for a in args:print(colour + '{}'.format(a) + END)
+            for a in args:print(colour + '{}'.format(a) + END)  # Linux系统会报错
         return colour + sep.join('{}'.format(a) for a in args) + END
 
     @classmethod

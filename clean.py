@@ -61,14 +61,16 @@ def replace_tag(html):
 
 
 def replace_empty_bracket(text):
-    return re.sub('\[\]|【】|（）|\(\)|{}|<>', '', text)
+    return re.sub('\[\]|【】|（）|\(\)|{}|<>|“”|‘’', '', text)
+    # return re.sub('\[\]|（）|{}|<>|“”|‘’', '', text)  # 去掉()【】
+    # return re.sub('[\[【（({<][\]】）)}>]', '', text)
 
 
 def replace_punctuation(text):
     """替换标点（英→中）"""
-    text = replace_empty_bracket(text)  # 空括号
     text = text.replace('(', '（').replace(')', '）')  # 圆括号
-    text = text.replace('【', '（').replace('】', '）')  # 方括号（后用于关键词高亮）
+    text = text.replace('【', '（').replace('】', '）')  # 方括号（之后用于关键词高亮）
+    text = replace_empty_bracket(text)  # 空括号
     text = re.sub('[;；]+', '；', text)  # 分号
     text = re.sub('[!！]+', '！', text)  # 叹号
     text = re.sub('[?？]+', '？', text)  # 问号
@@ -96,8 +98,8 @@ sep10 = re.compile('[\n。…；;]+|(?<=[\u4e00-\u9fa5])[.]+(?=[\u4e00-\u9fa5])'
 sep15 = re.compile('[\n。…；;!！?？]+|(?<=[a-z\u4e00-\u9fa5])[.]+(?=[a-z\u4e00-\u9fa5])', re.I).split
 sep20 = re.compile('[!！?？]+').split
 sep30 = re.compile('[,，:：]+').split
-sep40 = re.compile('[^a-zA-Z0-9\u4e00-\u9fa5]+').split
-sep45 = re.compile('[^a-zA-Z\u4e00-\u9fa5]+').split
+sep40 = re.compile('\W+').split  # 非中英文数字下划线
+sep45 = re.compile('[^a-zA-Z\u4e00-\u9fa5]+').split  # 非中英文
 sep_cn = re.compile(
     '^ ?[0-9]{1,2}、|'
     '^ ?[0-9]{1,2}[.](?=[^0-9])|'
@@ -145,7 +147,7 @@ def text2phrase(text):
                 yield phrase
 
 
-re_time = re.compile('[0-9]+([天年月日时分秒°]|小时|分钟|毫秒|时辰)+[0-9天年月日时分秒]*')
+re_time = re.compile('[0-9]+([天年月日时分秒°]|小时|分钟|毫秒|时辰)[0-9天年月日时分秒]*')
 re_ymd = re.compile(
     '((19|20)[0-9]{2}年(0?[1-9]|1[012])月(0?[1-9]|[12][0-9]|3[01])日)|'
     '((19|20)[0-9]{2}-(0?[1-9]|1[012])-(0?[1-9]|[12][0-9]|3[01]))|'
